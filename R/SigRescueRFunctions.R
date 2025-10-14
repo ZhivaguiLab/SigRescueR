@@ -103,7 +103,8 @@ SigRescueR <- function(objects,
 #'
 #' @import rstan
 #' @import lsa
-#' @import tidyverse
+#' @import magrittr
+#' @import dplyr
 #' @export
 
 

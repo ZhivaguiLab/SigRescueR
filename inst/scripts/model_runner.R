@@ -34,7 +34,7 @@ if(parallel::detectCores() >= 80) { ## If greater than 80 cores then just use 80
 
 ## Load required packages
 message("Loading Required Libraries")
-packages <- c("rstan", "tidyverse", "data.table", "parallel")
+packages <- c("rstan", "magrittr", "dplyr", "data.table", "parallel")
 
 for (pkg in packages) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
