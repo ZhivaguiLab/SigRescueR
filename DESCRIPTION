@@ -1,8 +1,9 @@
 Package: SigRescueR
-Title: What the Package Does (One Line, Title Case)
+Title: A Package For Removing Baseline Mutational Signatures From Exposure Mutational Signature
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
+    c(person(given="Peter", family="Nguyen", email="peter.nguyen@unlv.edu", role=c("aut", "cre")),
+    person(given="Maria", family="Zhivagui", email="maria.zhivagui@unlv.edu", role=c("aut")))
 Description: What the package does (one paragraph).
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
