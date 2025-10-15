@@ -4,9 +4,13 @@ Version: 0.0.0.9000
 Authors@R: 
     c(person(given="Peter", family="Nguyen", email="peter.nguyen@unlv.edu", role=c("aut", "cre")),
     person(given="Maria", family="Zhivagui", email="maria.zhivagui@unlv.edu", role=c("aut")))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Description: SigRescueR applies bayesian inference to remove baseline mutational signatures from 
+the exposed sample mutational spectra. SigRescueR relies on the exposed sample count data and the 
+normalized baseline signature to estimate the activity of the baseline and exposure while inferring 
+the exposure-associated mutation signature. It supports single and multi-background profiles and 
+perform parallel processing when multiple exposed samples are provided. SigRescueR can be applied 
+to any SBS channels, including SBS-96 and SBS-288 classifications.
+License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -18,3 +22,5 @@ Imports:
     magrittr,
     parallel,
     rstan
+Depends: 
+    R (>= 4.5.1)
