@@ -4,12 +4,12 @@ Version: 0.0.0.9000
 Authors@R: 
     c(person(given="Peter", family="Nguyen", email="peter.nguyen@unlv.edu", role=c("aut", "cre")),
     person(given="Maria", family="Zhivagui", email="maria.zhivagui@unlv.edu", role=c("aut")))
-Description: SigRescueR applies bayesian inference to remove baseline mutational signatures from 
-the exposed sample mutational spectra. SigRescueR relies on the exposed sample count data and the 
-normalized baseline signature to estimate the activity of the baseline and exposure while inferring 
-the exposure-associated mutation signature. It supports single and multi-background profiles and 
-perform parallel processing when multiple exposed samples are provided. SigRescueR can be applied 
-to any SBS channels, including SBS-96 and SBS-288 classifications.
+Description: SigRescueR applies bayesian inference to remove baseline mutational signatures from
+ the exposed sample mutational spectra. SigRescueR relies on the exposed sample count data and the 
+ normalized baseline signature to estimate the activity of the baseline and exposure while inferring
+ the exposure-associated mutation signature. It supports single and multi-background profiles and
+ perform parallel processing when multiple exposed samples are provided. SigRescueR can be applied 
+ to any SBS channels, including SBS-96 and SBS-288 classifications.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -17,10 +17,11 @@ RoxygenNote: 7.3.3
 URL: https://github.com/nguyenptuan/SigRescueR
 BugReports: https://github.com/nguyenptuan/SigRescueR/issues
 Imports: 
-    data.table,
-    dplyr,
-    magrittr,
-    parallel,
-    rstan
+    data.table (>= 1.17.8),
+    dplyr (>= 1.1.4),
+    magrittr (>= 2.0.3),
+    parallel (>= 4.5.1),
+    rstan (>= 2.32.7),
+    tibble (>= 3.3.0)
 Depends: 
     R (>= 4.5.1)

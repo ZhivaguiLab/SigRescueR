@@ -9,14 +9,14 @@ SigRescueRModel(model = "COM-Poisson", warmup = 2000, iter = 6000, chains = 4)
 \arguments{
 \item{model}{A character string specifying the Stan model to use. Default = COM-Poisson.}
 
+\item{warmup}{An integer to specify the number of warm-up iterations before sampling
+begins. Default = 2000.}
+
 \item{iter}{An integer to specify the total number of iterations. The number of posterior
 sampling is equal to the total number of iterations - the number of warm-up iterations.
 Default = 6000. Thus, 4000 posterior sampling.}
 
 \item{chains}{An integer specifying the number of Markov chains to run. Default = 4.}
-
-\item{wamrup}{An integer to specify the number of warm-up iterations before sampling
-begins. Default = 2000.}
 }
 \description{
 This function creates an object that preloads the selected Stan model with Stan model

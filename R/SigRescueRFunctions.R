@@ -5,7 +5,7 @@
 #' each time Bayesian inference is used.
 #'
 #' @param model A character string specifying the Stan model to use. Default = COM-Poisson.
-#' @param wamrup An integer to specify the number of warm-up iterations before sampling
+#' @param warmup An integer to specify the number of warm-up iterations before sampling
 #' begins. Default = 2000.
 #' @param iter An integer to specify the total number of iterations. The number of posterior
 #' sampling is equal to the total number of iterations - the number of warm-up iterations.
@@ -102,9 +102,10 @@ SigRescueR <- function(objects,
 #' @param MutationType A character vector specifying the ordered mutation context.
 #'
 #' @import rstan
-#' @import lsa
-#' @import magrittr
+#' @importFrom lsa cosine
 #' @import dplyr
+#' @import tibble
+#' @importFrom magrittr %>%
 #' @export
 
 
