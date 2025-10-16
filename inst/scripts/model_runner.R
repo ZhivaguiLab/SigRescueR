@@ -92,7 +92,7 @@ res <- mclapply(X = samplelist, FUN = function(x) {
               control = list(adapt_delta = 0.95))
 
   message(paste0("Finished Bayesian Model: ", x))
-  return(list(fit = fit, s_t = s_t, s_b = control_norm))
+  return(list(fit = fit, s_t = s_t, s_b = control_norm, MutationType = treatment$MutationType))
 }, mc.cores = 20) ## Number of parallel processing (20 means run 20 samples max)
 
 names(res) <- samples

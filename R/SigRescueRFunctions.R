@@ -109,7 +109,7 @@ SigRescueR <- function(objects,
 #' @export
 
 
-SigRescueRExtract <- function(res, MutationType) {
+SigRescueRExtract <- function(res) {
   ## Function to compute Poisson deviance
   poisson_deviance <- function(y, y_hat) {
     # handle zeros safely
@@ -201,7 +201,7 @@ SigRescueRExtract <- function(res, MutationType) {
   ## Convert list to data frame
   samp.res <- as.data.frame(do.call(rbind, samp.res)) %>% remove_rownames()
   samp.cleaned <- as.data.frame(do.call(cbind, samp.cleaned)) %>%
-    'rownames<-' (MutationType) %>%
+    'rownames<-' (fit$MutationType) %>%
     rownames_to_column(var = "MutationType")
 
   ## Assign them to global environment
