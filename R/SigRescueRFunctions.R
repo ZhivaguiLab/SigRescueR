@@ -16,7 +16,7 @@
 #' @export
 
 
-SigRescueRModel <- function(model = "COM-Poisson", warmup = 2000, iter = 6000, chains = 4) {
+SigRescueSetup <- function(model = "COM-Poisson", warmup = 2000, iter = 6000, chains = 4) {
   if(model == "COM-Poisson") {
     ## Model name
     model <- "COM-Poisson"
@@ -58,7 +58,7 @@ SigRescueRModel <- function(model = "COM-Poisson", warmup = 2000, iter = 6000, c
 #'
 #' @export
 
-SigRescueR <- function(objects,
+SigRescueRun <- function(objects,
                        script_path = system.file("scripts", "model_runner.R", package = "SigRescueR")) {
 
   tmp_data_files <- list()
@@ -109,7 +109,7 @@ SigRescueR <- function(objects,
 #' @export
 
 
-SigRescueRExtract <- function(res) {
+SigRescueAnalyze <- function(res) {
   ## Function to compute Poisson deviance
   poisson_deviance <- function(y, y_hat) {
     # handle zeros safely
@@ -233,7 +233,7 @@ SigRescueRExtract <- function(res) {
 #' @importFrom magrittr %>%
 #' @export
 
-SigRescueRplotClean <- function(clean, output_path = ".", filename = "clean_res", dpi = 600) {
+SigRescuePlot <- function(clean, output_path = ".", filename = "clean_res", dpi = 600) {
   plotlist <- list()
   ## Functions
   getSBSorder <- function() {
@@ -309,7 +309,7 @@ SigRescueRplotClean <- function(clean, output_path = ".", filename = "clean_res"
             panel.spacing = unit(0, "lines"),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
-            axis.text.x = element_text(family = "Arial", angle = 90, vjust = 0.5, hjust = 1, size = 3, margin = margin(t = -1)),
+            axis.text.x = element_text(family = "Arial", angle = 90, vjust = 0.5, hjust = 1, size = 3),#, margin = margin(t = -1)),
             axis.ticks.x = element_blank(),
             axis.text.y = element_text(family = "Arial", size = 6),
             axis.title.y = element_text(family = "Arial", size = 8),

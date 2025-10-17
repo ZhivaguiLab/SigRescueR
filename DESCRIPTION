@@ -20,7 +20,7 @@ Imports:
     data.table (>= 1.17.8),
     dplyr (>= 1.1.4),
     ggh4x (>= 0.3.1),
-    ggplot2 (>= 3.5.2),
+    ggplot2 (>= 4.0.0),
     gridExtra (>= 2.3),
     magrittr (>= 2.0.3),
     parallel (>= 4.5.1),
