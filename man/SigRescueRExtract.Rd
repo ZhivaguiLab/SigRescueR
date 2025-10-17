@@ -4,7 +4,7 @@
 \alias{SigRescueRExtract}
 \title{Extracts posterior sampling from \code{SigRescueR()}.}
 \usage{
-SigRescueRExtract(res, MutationType)
+SigRescueRExtract(res)
 }
 \arguments{
 \item{res}{An object returned by \code{SigRescueR()} containing posterior estimates.}

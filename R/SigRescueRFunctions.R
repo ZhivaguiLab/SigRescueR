@@ -208,3 +208,128 @@ SigRescueRExtract <- function(res) {
   assign("samp.cleaned", samp.cleaned, envir = .GlobalEnv)
   assign("samp.res", samp.res, envir = .GlobalEnv)
 }
+
+#' Plot SBS results.
+#'
+#' This function is designed to generate a visualization of the results from `SigRescueR()`
+#' after data extraction (`SigRescueRExtract()`) using `samp.cleaned`, where the x-axis
+#' represents the mutation context faceted by mutation type and y-axis represents percentage
+#' of SBS mutation.
+#'
+#' @param clean Data frame representing the mutational catalogue. Each column corresponds
+#' to a sample and must include a `MutationType` column (first column) specifying the
+#' mutation context (e.g. `A[C>A]A`).
+#' @param output_path Character string specifying the full path where the ouput `.pdf` file
+#' will be saved. Default = ".".
+#' @param filename Character string specifying the file name. Default = "clean_res".
+#' @param dpi Numeric value indicating the resolution (dots per inch) for the saved plot.
+#' Default = 600.
+#'
+#' @import ggplot2
+#' @import dplyr
+#' @import tibble
+#' @import ggh4x
+#' @import gridExtra
+#' @importFrom magrittr %>%
+#' @export
+
+SigRescueRplotClean <- function(clean, output_path = ".", filename = "clean_res", dpi = 600) {
+  plotlist <- list()
+  ## Functions
+  getSBSorder <- function() {
+    counter <- 1
+    df <- as.data.frame(matrix(data = NA, nrow = 96, ncol = 3))
+    all_bp <- c("A", "C", "G", "T")
+    pyr_muts <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G")
+    for(m in pyr_muts){
+      for(a in all_bp){
+        for(b in all_bp){
+          df[counter,1] <- paste(a, "[",m, "]", b, sep="")
+          df[counter,2] <- m
+          df[counter,3] <- paste(a, substring(m,1,1),b, sep="")
+          counter <- counter + 1 ## Add counter for next row
+        }
+      }
+    }
+    return(df)
+  }
+
+  sbs.df <- getSBSorder()
+
+  ## Mutation context colors
+  mut.color <- c('deepskyblue','black','red','lightgrey','yellowgreen','pink')
+
+  ## Plot function 1
+  plotSBS <- function(df, x.label, alpha = 1) {
+    df.pd <- df %>% left_join(x = ., y = sbs.df, by = c("MutationType"="V1"))
+    df.pd$MutationType <- factor(x = df.pd$MutationType, levels = sbs.df$V1)
+
+    anno <- df.pd %>% dplyr::filter(V2 == "T>G") %>%
+      mutate(x = Inf,
+             y = Inf,
+             label = paste0("Total: ", round(sum(df.pd$value), digits = 0))
+      )
+
+    p1 <- ggplot(data = df.pd, aes(x = MutationType, y = value/sum(value)*100)) +
+      geom_col(aes(fill = V2), alpha = alpha) +
+      theme_bw() +
+      guides(fill = "none") +
+      scale_fill_manual(values = mut.color) +
+      facet_wrap2(.~V2, nrow = 1, scale = "free_x", drop = TRUE,
+                  strip = strip_themed(
+                    background_x = list(
+                      element_rect(fill = mut.color[1], color = "transparent"),
+                      element_rect(fill = mut.color[2], color = "transparent"),
+                      element_rect(fill = mut.color[3], color = "transparent"),
+                      element_rect(fill = mut.color[4], color = "transparent"),
+                      element_rect(fill = mut.color[5], color = "transparent"),
+                      element_rect(fill = mut.color[6], color = "transparent")
+                    ),
+                    text_x = list(
+                      element_text(color = "white", face = "bold", family = "Arial", size = 6, margin = margin(1, 1, 1, 1))
+                    )
+                  )
+      ) +
+      geom_text(
+        data = anno,
+        aes(x = x, y = y, label = label),
+        inherit.aes = FALSE,
+        size = 2.7,
+        vjust = 1.1,
+        hjust = 1.1,
+        family = "Arial",
+        fontface = "plain"
+      ) +
+      scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+      scale_x_discrete(labels = sbs.df$V3) +
+      coord_cartesian(clip = "off") +
+      ylab("% SBS") + xlab(x.label) +
+      theme(panel.border = element_blank(),
+            strip.background = element_blank(),
+            panel.spacing = unit(0, "lines"),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.text.x = element_text(family = "Arial", angle = 90, vjust = 0.5, hjust = 1, size = 3, margin = margin(t = -1)),
+            axis.ticks.x = element_blank(),
+            axis.text.y = element_text(family = "Arial", size = 6),
+            axis.title.y = element_text(family = "Arial", size = 8),
+            axis.title.x = element_text(family = "Arial", size = 8))
+
+    return(p1)
+  }
+
+  for(n in 2:ncol(clean)) {
+    samp.name <- names(clean)[n]
+    pd <- clean %>% .[,c(1,n)] %>% 'colnames<-' (c("MutationType", "value"))
+    plotlist[[samp.name]] <- plotSBS(pd, x.label = samp.name)
+  }
+
+  arranged_plots_multiple_pages <- marrangeGrob(plotlist, nrow = 1, ncol = 1, top = NULL)
+  ggsave(paste0(output_path, filename,".pdf"),
+         plot = arranged_plots_multiple_pages,
+         device = cairo_pdf,
+         width = 6, height = 1.5,
+         dpi = dpi,
+         family = "Arial")
+  dev.off()
+}
