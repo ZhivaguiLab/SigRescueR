@@ -301,7 +301,7 @@ SigRescuePlot <- function(clean, output_path = ".", filename = "clean_res", dpi 
         fontface = "plain"
       ) +
       scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
-      scale_x_discrete(labels = sbs.df$V3) +
+      scale_x_discrete(labels = setNames(sbs.df$V3, sbs.df$V1)) +
       coord_cartesian(clip = "off") +
       ylab("% SBS") + xlab(x.label) +
       theme(panel.border = element_blank(),
