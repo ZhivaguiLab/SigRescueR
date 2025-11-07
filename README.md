@@ -1,5 +1,5 @@
 ### **SigRescueR**
-SigRescueR R package provides a pan-system framework for noise correction and mutational signature identification across various mutation classes and mutational channels.
+SigRescueR package provides a pan-system framework for noise correction and mutational signature identification across various mutation classes and mutational channels.
 
 <p align="center"> <img src="https://github.com/user-attachments/assets/72691df9-2d77-4272-b534-ba5487bec70f" alt="SigRescueR logo" width="600"> </p>
 
