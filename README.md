@@ -36,7 +36,7 @@ control <- control %>% column_to_rownames(var = "MutationType") %>%
 ```
 Then, specify the `filename` and `output_path`. Next, create a vector of the required objects as `objects` and
 run the function `SigRescueRun()` to start the Bayesian inference, which executes the main function of _SigRescueR_. 
-It is essential that the MutationType column matches between the two objects, as inconsistencies will prevent correct 
+It is essential that the `MutationType` column matches between the two objects, as inconsistencies will prevent correct 
 execution of the function. The approx. runtime for this example is 5 minutes.
 ```
 output_path <- "/full/path/to/output_directory/"
