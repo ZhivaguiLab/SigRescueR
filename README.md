@@ -65,7 +65,7 @@ SigRescueR::SigRescuePlot(samp.cleaned)
 
 ### **Documentation**
 
-Detailed package documentation is available in the `docs` folder
+Detailed package documentation is available in the `Vignettes` folder
 
 
 
