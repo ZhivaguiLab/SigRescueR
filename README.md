@@ -1,6 +1,11 @@
 ## SigRescueR
 A Package For Removing Baseline Mutational Signatures From Exposure Mutational Signature
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/72691df9-2d77-4272-b534-ba5487bec70f" alt="original" width="600">
+</p>
+
+
 #### Install _SigRescueR_ from GitHub
 ```
 install.packages("devtools")
