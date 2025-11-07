@@ -50,7 +50,7 @@ executed to generate the cleaned profile object `samp.cleaned` as well as the su
 load(paste0(output_path, filename, ".rda"))
 SigRescueR::SigRescueAnalyze(res = res)
 ```
-Finally, you can use `samp.cleaned` to plot SBS-96 profiles with plotmydata(). By default, the `output_path` will be the 
+Finally, you can use `samp.cleaned` to plot SBS-96 profiles with `SigRescuePlot()`. By default, the `output_path` will be the 
 current working directory with the `filename` will be named "clean_res", but you can easily modify these settings 
 using the `output_path` and `filename` parameters within the function
 ```
