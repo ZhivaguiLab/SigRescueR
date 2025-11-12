@@ -21,7 +21,7 @@ This tool is particularly valuable for researchers studying environmental mutage
 ### **Installation**
 ```
 install.packages("devtools")
-devtools::install_github("nguyenptuan/SigRescueR")
+devtools::install_github("ZhivaguiLab/SigRescueR")
 ```
 
 ### **Usage Example**
