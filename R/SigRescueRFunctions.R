@@ -211,16 +211,18 @@ SigRescueAnalyze <- function(res) {
 
 #' Plot SBS results.
 #'
-#' This function is designed to generate a visualization of the results from `SigRescueR()`
-#' after data extraction (`SigRescueRExtract()`) using `samp.cleaned`, where the x-axis
-#' represents the mutation context faceted by mutation type and y-axis represents percentage
-#' of SBS mutation.
+#' This function is designed to generate a visualization of the results from `SigRescueR()`.
+#' SBS-96 mutational signature plots for the original (top left), reconstructed (bottom left),
+#' background (top right) and inferred exposure (bottom right). Alpha transparency is set to
+#' reflect background (0.5) and exposure (1). The total number of mutations is indicated within
+#' the plots. A table with Reconstruction Accuracy (measured by cosine similarity), along with
+#' the background and exposure activity.
 #'
-#' @param clean Data frame representing the mutational catalogue. Each column corresponds
-#' to a sample and must include a `MutationType` column (first column) specifying the
-#' mutation context (e.g. `A[C>A]A`).
+#' @param res An object returned by `SigRescueR()` containing posterior estimates.
+#' @param ci Numeric value indicating the probability mass of the credible interval used to
+#' summarize the posterior (e.g. 0.025 is 2.5% credible interval). Default = 0.025.
 #' @param output_path Character string specifying the full path where the ouput `.pdf` file
-#' will be saved. Default = ".".
+#' will be saved. Default = current working directory.
 #' @param filename Character string specifying the file name. Default = "clean_res".
 #' @param dpi Numeric value indicating the resolution (dots per inch) for the saved plot.
 #' Default = 600.
@@ -230,11 +232,18 @@ SigRescueAnalyze <- function(res) {
 #' @import tibble
 #' @import ggh4x
 #' @import gridExtra
+#' @import patchwork
+#' @import png
+#' @import grid
 #' @importFrom magrittr %>%
 #' @export
 
-SigRescuePlot <- function(clean, output_path = ".", filename = "clean_res", dpi = 600) {
-  plotlist <- list()
+SigRescuePlot <- function(res, ci = 0.025, output_path = getwd(), filename = "clean_res", dpi = 600) {
+  ## Create temporary storage for plots
+  folder <- file.path(getwd(), "png_temp_storage")
+  if (!dir.exists(folder)) {
+    dir.create(folder)
+  }
   ## Functions
   getSBSorder <- function() {
     counter <- 1
@@ -259,7 +268,7 @@ SigRescuePlot <- function(clean, output_path = ".", filename = "clean_res", dpi 
   ## Mutation context colors
   mut.color <- c('deepskyblue','black','red','lightgrey','yellowgreen','pink')
 
-  ## Plot function 1
+  ## Function to plot SBS96
   plotSBS <- function(df, x.label, alpha = 1) {
     df.pd <- df %>% left_join(x = ., y = sbs.df, by = c("MutationType"="V1"))
     df.pd$MutationType <- factor(x = df.pd$MutationType, levels = sbs.df$V1)
@@ -286,7 +295,7 @@ SigRescuePlot <- function(clean, output_path = ".", filename = "clean_res", dpi 
                       element_rect(fill = mut.color[6], color = "transparent")
                     ),
                     text_x = list(
-                      element_text(color = "white", face = "bold", family = "Arial", size = 6, margin = margin(1, 1, 1, 1))
+                      element_text(color = "white", face = "bold", size = 6, margin = margin(1, 1, 1, 1))
                     )
                   )
       ) +
@@ -294,11 +303,9 @@ SigRescuePlot <- function(clean, output_path = ".", filename = "clean_res", dpi 
         data = anno,
         aes(x = x, y = y, label = label),
         inherit.aes = FALSE,
-        size = 2.7,
+        size = 2.4,
         vjust = 1.1,
-        hjust = 1.1,
-        family = "Arial",
-        fontface = "plain"
+        hjust = 1.1
       ) +
       scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
       scale_x_discrete(labels = setNames(sbs.df$V3, sbs.df$V1)) +
@@ -309,27 +316,185 @@ SigRescuePlot <- function(clean, output_path = ".", filename = "clean_res", dpi 
             panel.spacing = unit(0, "lines"),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
-            axis.text.x = element_text(family = "Arial", angle = 90, vjust = 0.5, hjust = 1, size = 3),#, margin = margin(t = -1)),
+            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 3),
             axis.ticks.x = element_blank(),
-            axis.text.y = element_text(family = "Arial", size = 6),
-            axis.title.y = element_text(family = "Arial", size = 8),
-            axis.title.x = element_text(family = "Arial", size = 8))
+            axis.text.y = element_text(size = 6),
+            axis.title.y = element_text(size = 8),
+            axis.title.x = element_text(size = 8))
 
     return(p1)
   }
 
-  for(n in 2:ncol(clean)) {
-    samp.name <- names(clean)[n]
-    pd <- clean %>% .[,c(1,n)] %>% 'colnames<-' (c("MutationType", "value"))
-    plotlist[[samp.name]] <- plotSBS(pd, x.label = samp.name)
+  ## Function to plot SBS96 with alphas
+  plotSBS.multialpha <- function(df, x.label, alpha = 1) {
+    df.pd <- df %>% left_join(x = ., y = sbs.df, by = c("MutationType"="V1"))
+    df.pd$MutationType <- factor(x = df.pd$MutationType, levels = sbs.df$V1)
+
+    anno <- df.pd %>% dplyr::filter(V2 == "T>G") %>%
+      mutate(x = Inf,
+             y = Inf,
+             label = paste0("Total: ", round(sum(df.pd$value), digits = 0))
+      )
+
+    p1 <- ggplot(data = df.pd, aes(x = MutationType, y = value/sum(value)*100)) +
+      geom_col(aes(fill = V2, alpha = status)) +
+      theme_bw() +
+      guides(fill = "none") +
+      scale_fill_manual(values = mut.color) +
+      scale_alpha_manual(values = alpha) +
+      facet_wrap2(.~V2, nrow = 1, scale = "free_x", drop = TRUE,
+                  strip = strip_themed(
+                    background_x = list(
+                      element_rect(fill = mut.color[1], color = "transparent"),
+                      element_rect(fill = mut.color[2], color = "transparent"),
+                      element_rect(fill = mut.color[3], color = "transparent"),
+                      element_rect(fill = mut.color[4], color = "transparent"),
+                      element_rect(fill = mut.color[5], color = "transparent"),
+                      element_rect(fill = mut.color[6], color = "transparent")
+                    ),
+                    text_x = list(
+                      element_text(color = "white", face = "bold", size = 6, margin = margin(1, 1, 1, 1))
+                    )
+                  )
+      ) +
+      geom_text(
+        data = anno,
+        aes(x = x, y = y, label = label),
+        inherit.aes = FALSE,
+        size = 2.4,
+        vjust = 1.1,
+        hjust = 1.1
+      ) +
+      scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+      scale_x_discrete(labels = setNames(sbs.df$V3, sbs.df$V1)) +
+      coord_cartesian(clip = "off") +
+      ylab("% SBS") + xlab(x.label) +
+      theme(panel.border = element_blank(),
+            strip.background = element_blank(),
+            panel.spacing = unit(0, "lines"),
+            legend.position = "none",
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 3),
+            axis.ticks.x = element_blank(),
+            axis.text.y = element_text(size = 6),
+            axis.title.y = element_text(size = 8),
+            axis.title.x = element_text(size = 8))
+
+    return(p1)
   }
 
-  arranged_plots_multiple_pages <- marrangeGrob(plotlist, nrow = 1, ncol = 1, top = NULL)
-  ggsave(paste0(output_path, filename,".pdf"),
-         plot = arranged_plots_multiple_pages,
-         device = cairo_pdf,
-         width = 6, height = 1.5,
-         dpi = dpi,
-         family = "Arial")
+  ## Plot layout
+  layout <- "
+  AAAABBBB
+  CCCCDDDD
+  FFEEEEGG"
+
+  counter2 <- 1
+  for(samp in names(res)) {
+    ## Get stan fit res for specific samp
+    fit <- res[[samp]]
+    ## extract posterior draws
+    posterior <- rstan::extract(fit$fit)
+
+    ## extract all theta
+    all_theta <- as.data.frame(posterior$norm_theta_b) %>% ## background activity
+      mutate(norm_theta_t = posterior$norm_theta_t) %>% ## exposure activity
+      sweep(x = ., MARGIN = 1, STATS = rowSums(.), FUN = "/") %>% ## normalize
+      colMeans()
+
+    ## subset theta based on type (baseline vs treatment)
+    theta_t <- all_theta[length(all_theta)]
+    theta_b <- all_theta[-length(all_theta)]
+
+    theta_b_ind <- theta_b ## store baseline activity for replicates
+
+    ## extract inferred exposure signautres
+    s_t <- apply(posterior$s_t, 2, quantile, probs = ci) ## treatment-induced profile (latent), selected lower bound. less leaky.
+    s_t <- s_t / sum(s_t) ## normalize
+
+    ## Reconstruct Exposure
+    reconstruct_s_t <- (s_t * theta_t) * sum(fit$s_t)
+    ## Reconstruct background
+    reconstruct_s_b <- sapply(1:length(theta_b), function(x) {
+      (as.numeric(fit$s_b[,x]) * theta_b[x]) * sum(fit$s_t)
+    })
+
+    ## Sum all the background together to get one background profile
+    if(ncol(reconstruct_s_b)>1) {
+      reconstruct_s_b <- rowSums(reconstruct_s_b)
+    }
+
+    ## Generate reconstructed profile
+    reconstructed <- reconstruct_s_t + reconstruct_s_b
+
+    ##############
+    ## Plotting ##
+    ## Uncleaned profile (Original)
+    original.pd <- data.frame(MutationType = fit$MutationType,
+                              value = fit$s_t)
+    p1 <- suppressMessages(plotSBS(df = original.pd, x.label = "Original"))
+
+    ## Latent st (Cleaned)
+    reconstruct_s_t.pd <- data.frame(MutationType = fit$MutationType,
+                                     value = as.numeric(reconstruct_s_t))
+
+    p3 <- suppressMessages(plotSBS(df = reconstruct_s_t.pd, x.label = "Exposure", alpha = 1) +
+                             scale_y_continuous(breaks = seq(0, 20, by = 2)))
+
+    ## Fixed sb (Baseline)
+    reconstruct_s_b.pd <- data.frame(MutationType = fit$MutationType,
+                                     value = as.numeric(reconstruct_s_b))
+
+    p4 <- suppressMessages(plotSBS(df = reconstruct_s_b.pd, x.label = "Background", alpha = 0.5) +
+                             scale_y_continuous(breaks = seq(0, 6, by = 2), limits = c(0,6)))
+
+    ## Reconstructed ( Cleaned + Baseline)
+    rsb <- reconstruct_s_b.pd %>% mutate(status = "Background")
+    rst <- reconstruct_s_t.pd %>% mutate(status = "Exposure")
+
+    reconstructed.pd <- rbind(rsb, rst)
+    reconstructed.pd$status <- factor(x = reconstructed.pd$status, levels = c("Background", "Exposure"))
+
+    p2 <- suppressMessages(plotSBS.multialpha(df = reconstructed.pd, x.label = "Reconstructed", alpha = c(0.5, 1)) +
+                             scale_y_continuous(breaks = seq(0, 10, by = 2)))
+
+    summarytable <- data.frame(
+      "Reconstruction Accuracy" = lsa::cosine(as.numeric(reconstructed), as.numeric(fit$s_t)),
+      "Background Activity" = theta_b,
+      "Exposure Activity" = theta_t,
+      check.names = FALSE)
+
+    table.pd <- gt::gt(summarytable) |>
+      gt::cols_align(align = "center", columns = everything()) |>
+      gt::tab_options(table.font.size = px(10))
+
+    combined_plot1 <- p1 + p4 + p2 + p3 + table.pd + plot_spacer() + plot_layout(design=layout) +
+      plot_annotation(title = samp) &
+      theme(#plot.tag = element_text(face = 'bold', size = 10),
+        plot.title=element_text(hjust=0.5, size = 10),
+        text = element_text(family = "Arial"))
+
+    ## Save patchwork plot as png in temp folder
+    ggsave(filename = paste0(folder,"/png_", counter2, ".png"), , width = 170, height = 90,
+           units = "mm", dpi = 600)
+    counter2 <- counter2 + 1
+  }
+
+  ## Convert all png files in temp folder into single multi-page PDF
+  files <- list.files(path = folder,
+                      pattern = "\\.png$", full.names = TRUE)
+
+  pdf(file = paste0(output_path, "/", filename, ".pdf"), height = 3.5)
+
+  for(f in files) {
+    grid::grid.newpage()
+    img <- png::readPNG(f)
+    grid::grid.raster(img)
+  }
+
   dev.off()
+
+  ## Delete temp folder
+  unlink(folder, recursive = TRUE)
 }

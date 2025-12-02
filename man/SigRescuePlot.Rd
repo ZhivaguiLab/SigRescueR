@@ -4,15 +4,22 @@
 \alias{SigRescuePlot}
 \title{Plot SBS results.}
 \usage{
-SigRescuePlot(clean, output_path = ".", filename = "clean_res", dpi = 600)
+SigRescuePlot(
+  res,
+  ci = 0.025,
+  output_path = getwd(),
+  filename = "clean_res",
+  dpi = 600
+)
 }
 \arguments{
-\item{clean}{Data frame representing the mutational catalogue. Each column corresponds
-to a sample and must include a \code{MutationType} column (first column) specifying the
-mutation context (e.g. \verb{A[C>A]A}).}
+\item{res}{An object returned by \code{SigRescueR()} containing posterior estimates.}
+
+\item{ci}{Numeric value indicating the probability mass of the credible interval used to
+summarize the posterior (e.g. 0.025 is 2.5\% credible interval). Default = 0.025.}
 
 \item{output_path}{Character string specifying the full path where the ouput \code{.pdf} file
-will be saved. Default = ".".}
+will be saved. Default = current working directory.}
 
 \item{filename}{Character string specifying the file name. Default = "clean_res".}
 
@@ -20,8 +27,10 @@ will be saved. Default = ".".}
 Default = 600.}
 }
 \description{
-This function is designed to generate a visualization of the results from \code{SigRescueR()}
-after data extraction (\code{SigRescueRExtract()}) using \code{samp.cleaned}, where the x-axis
-represents the mutation context faceted by mutation type and y-axis represents percentage
-of SBS mutation.
+This function is designed to generate a visualization of the results from \code{SigRescueR()}.
+SBS-96 mutational signature plots for the original (top left), reconstructed (bottom left),
+background (top right) and inferred exposure (bottom right). Alpha transparency is set to
+reflect background (0.5) and exposure (1). The total number of mutations is indicated within
+the plots. A table with Reconstruction Accuracy (measured by cosine similarity), along with
+the background and exposure activity.
 }
