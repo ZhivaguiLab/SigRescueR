@@ -204,8 +204,20 @@ SigRescueAnalyze <- function(res) {
     'rownames<-' (fit$MutationType) %>%
     rownames_to_column(var = "MutationType")
 
+  ## Generate weighted profile
+  ## Generate weighted profile for uncleaned
+  mat.mutcat <- as.matrix(samp.cleaned[,-1]) ## Convert df to matrix
+  df.sum <- colSums(samp.cleaned[,-1]) ## Get tot mut by sample
+  tot.mut <- sum(df.sum) ## Get total mutation across samples
+  mat.weight <- as.matrix(df.sum / tot.mut) ## Get weights
+  weighted.cleaned <- as.data.frame(mat.mutcat %*% mat.weight) %>% ## matrix multiplication, order matters
+    'colnames<-' ("weighted_profile") %>%
+    'rownames<-' (samp.cleaned$MutationType) %>%
+    rownames_to_column(var = "MutationType")
+
   ## Assign them to global environment
   assign("samp.cleaned", samp.cleaned, envir = .GlobalEnv)
+  assign("samp.cleaned.weighted", weighted.cleaned, envir = .GlobalEnv)
   assign("samp.res", samp.res, envir = .GlobalEnv)
 }
 
@@ -235,6 +247,7 @@ SigRescueAnalyze <- function(res) {
 #' @import patchwork
 #' @import png
 #' @import grid
+#' @import gt
 #' @importFrom magrittr %>%
 #' @export
 
