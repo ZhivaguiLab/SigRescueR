@@ -6,6 +6,7 @@
 \usage{
 SigRescuePlot(
   res,
+  context,
   ci = 0.025,
   output_path = getwd(),
   filename = "clean_res",
@@ -14,6 +15,8 @@ SigRescuePlot(
 }
 \arguments{
 \item{res}{An object returned by \code{SigRescueR()} containing posterior estimates.}
+
+\item{context}{Character string specifying the mutation context ("96" or "288").}
 
 \item{ci}{Numeric value indicating the probability mass of the credible interval used to
 summarize the posterior (e.g. 0.025 is 2.5\% credible interval). Default = 0.025.}

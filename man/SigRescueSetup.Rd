@@ -14,7 +14,7 @@ begins. Default = 1000.}
 
 \item{iter}{An integer to specify the total number of iterations. The number of posterior
 sampling is equal to the total number of iterations - the number of warm-up iterations.
-Default = 25000. Thus, 1500 posterior sampling.}
+Default = 2500. Thus, 1500 posterior sampling.}
 
 \item{chains}{An integer specifying the number of Markov chains to run. Default = 4.}
 }

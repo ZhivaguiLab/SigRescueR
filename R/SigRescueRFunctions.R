@@ -9,7 +9,7 @@
 #' begins. Default = 1000.
 #' @param iter An integer to specify the total number of iterations. The number of posterior
 #' sampling is equal to the total number of iterations - the number of warm-up iterations.
-#' Default = 25000. Thus, 1500 posterior sampling.
+#' Default = 2500. Thus, 1500 posterior sampling.
 #' @param chains An integer specifying the number of Markov chains to run. Default = 4.
 #'
 #' @import rstan
@@ -231,6 +231,7 @@ SigRescueAnalyze <- function(res) {
 #' the background and exposure activity.
 #'
 #' @param res An object returned by `SigRescueR()` containing posterior estimates.
+#' @param context Character string specifying the mutation context ("96" or "288").
 #' @param ci Numeric value indicating the probability mass of the credible interval used to
 #' summarize the posterior (e.g. 0.025 is 2.5% credible interval). Default = 0.025.
 #' @param output_path Character string specifying the full path where the ouput `.pdf` file
@@ -242,6 +243,7 @@ SigRescueAnalyze <- function(res) {
 #' @import ggplot2
 #' @import dplyr
 #' @import tibble
+#' @import tidyr
 #' @import ggh4x
 #' @import gridExtra
 #' @import patchwork
@@ -251,7 +253,7 @@ SigRescueAnalyze <- function(res) {
 #' @importFrom magrittr %>%
 #' @export
 
-SigRescuePlot <- function(res, ci = 0.025, output_path = getwd(), filename = "clean_res", dpi = 600) {
+SigRescuePlot <- function(res, context, ci = 0.025, output_path = getwd(), filename = "clean_res", dpi = 600) {
   ## Create temporary storage for plots
   folder <- file.path(getwd(), "png_temp_storage")
   if (!dir.exists(folder)) {
@@ -278,130 +280,248 @@ SigRescuePlot <- function(res, ci = 0.025, output_path = getwd(), filename = "cl
 
   sbs.df <- getSBSorder()
 
-  ## Mutation context colors
-  mut.color <- c('deepskyblue','black','red','lightgrey','yellowgreen','pink')
+  if(context == "96") { ## Required functions to plot sbs96
+    ## Set pdf height for saving
+    pdf.height <- 3.5
+    ## Mutation context colors
+    mut.color <- c('deepskyblue','black','red','lightgrey','yellowgreen','pink')
 
-  ## Function to plot SBS96
-  plotSBS <- function(df, x.label, alpha = 1) {
-    df.pd <- df %>% left_join(x = ., y = sbs.df, by = c("MutationType"="V1"))
-    df.pd$MutationType <- factor(x = df.pd$MutationType, levels = sbs.df$V1)
+    ## Function to plot SBS96
+    plotSig <- function(df, x.label, alpha = 1) {
+      df.pd <- df %>% left_join(x = ., y = sbs.df, by = c("MutationType"="V1"))
+      df.pd$MutationType <- factor(x = df.pd$MutationType, levels = sbs.df$V1)
 
-    anno <- df.pd %>% dplyr::filter(V2 == "T>G") %>%
-      mutate(x = Inf,
-             y = Inf,
-             label = paste0("Total: ", round(sum(df.pd$value), digits = 0))
-      )
+      anno <- df.pd %>% dplyr::filter(V2 == "T>G") %>%
+        mutate(x = Inf,
+               y = Inf,
+               label = paste0("Total: ", round(sum(df.pd$value), digits = 0))
+        )
 
-    p1 <- ggplot(data = df.pd, aes(x = MutationType, y = value/sum(value)*100)) +
-      geom_col(aes(fill = V2), alpha = alpha) +
-      theme_bw() +
-      guides(fill = "none") +
-      scale_fill_manual(values = mut.color) +
-      facet_wrap2(.~V2, nrow = 1, scale = "free_x", drop = TRUE,
-                  strip = strip_themed(
-                    background_x = list(
-                      element_rect(fill = mut.color[1], color = "transparent"),
-                      element_rect(fill = mut.color[2], color = "transparent"),
-                      element_rect(fill = mut.color[3], color = "transparent"),
-                      element_rect(fill = mut.color[4], color = "transparent"),
-                      element_rect(fill = mut.color[5], color = "transparent"),
-                      element_rect(fill = mut.color[6], color = "transparent")
-                    ),
-                    text_x = list(
-                      element_text(color = "white", face = "bold", size = 6, margin = margin(1, 1, 1, 1))
+      p1 <- ggplot(data = df.pd, aes(x = MutationType, y = value/sum(value)*100)) +
+        geom_col(aes(fill = V2), alpha = alpha) +
+        theme_bw() +
+        guides(fill = "none") +
+        scale_fill_manual(values = mut.color) +
+        facet_wrap2(.~V2, nrow = 1, scale = "free_x", drop = TRUE,
+                    strip = strip_themed(
+                      background_x = list(
+                        element_rect(fill = mut.color[1], color = "transparent"),
+                        element_rect(fill = mut.color[2], color = "transparent"),
+                        element_rect(fill = mut.color[3], color = "transparent"),
+                        element_rect(fill = mut.color[4], color = "transparent"),
+                        element_rect(fill = mut.color[5], color = "transparent"),
+                        element_rect(fill = mut.color[6], color = "transparent")
+                      ),
+                      text_x = list(
+                        element_text(color = "white", face = "bold", size = 6, margin = margin(1, 1, 1, 1))
+                      )
                     )
-                  )
-      ) +
-      geom_text(
-        data = anno,
-        aes(x = x, y = y, label = label),
-        inherit.aes = FALSE,
-        size = 2.4,
-        vjust = 1.1,
-        hjust = 1.1
-      ) +
-      scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
-      scale_x_discrete(labels = setNames(sbs.df$V3, sbs.df$V1)) +
-      coord_cartesian(clip = "off") +
-      ylab("% SBS") + xlab(x.label) +
-      theme(panel.border = element_blank(),
-            strip.background = element_blank(),
-            panel.spacing = unit(0, "lines"),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 3),
-            axis.ticks.x = element_blank(),
-            axis.text.y = element_text(size = 6),
-            axis.title.y = element_text(size = 8),
-            axis.title.x = element_text(size = 8))
+        ) +
+        geom_text(
+          data = anno,
+          aes(x = x, y = y, label = label),
+          inherit.aes = FALSE,
+          size = 2.4,
+          vjust = 1.1,
+          hjust = 1.1
+        ) +
+        scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+        scale_x_discrete(labels = setNames(sbs.df$V3, sbs.df$V1)) +
+        coord_cartesian(clip = "off") +
+        ylab("% SBS") + xlab(x.label) +
+        theme(panel.border = element_blank(),
+              strip.background = element_blank(),
+              panel.spacing = unit(0, "lines"),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 3),
+              axis.ticks.x = element_blank(),
+              axis.text.y = element_text(size = 6),
+              axis.title.y = element_text(size = 8),
+              axis.title.x = element_text(size = 8))
 
-    return(p1)
-  }
+      return(p1)
+    } ## End of required functions to plot sbs96
 
-  ## Function to plot SBS96 with alphas
-  plotSBS.multialpha <- function(df, x.label, alpha = 1) {
-    df.pd <- df %>% left_join(x = ., y = sbs.df, by = c("MutationType"="V1"))
-    df.pd$MutationType <- factor(x = df.pd$MutationType, levels = sbs.df$V1)
+    ## Function to plot SBS96 with alphas
+    plotSig.multialpha <- function(df, x.label, alpha = 1) {
+      df.pd <- df %>% left_join(x = ., y = sbs.df, by = c("MutationType"="V1"))
+      df.pd$MutationType <- factor(x = df.pd$MutationType, levels = sbs.df$V1)
 
-    anno <- df.pd %>% dplyr::filter(V2 == "T>G") %>%
-      mutate(x = Inf,
-             y = Inf,
-             label = paste0("Total: ", round(sum(df.pd$value), digits = 0))
-      )
+      anno <- df.pd %>% dplyr::filter(V2 == "T>G") %>%
+        mutate(x = Inf,
+               y = Inf,
+               label = paste0("Total: ", round(sum(df.pd$value), digits = 0))
+        )
 
-    p1 <- ggplot(data = df.pd, aes(x = MutationType, y = value/sum(value)*100)) +
-      geom_col(aes(fill = V2, alpha = status)) +
-      theme_bw() +
-      guides(fill = "none") +
-      scale_fill_manual(values = mut.color) +
-      scale_alpha_manual(values = alpha) +
-      facet_wrap2(.~V2, nrow = 1, scale = "free_x", drop = TRUE,
-                  strip = strip_themed(
-                    background_x = list(
-                      element_rect(fill = mut.color[1], color = "transparent"),
-                      element_rect(fill = mut.color[2], color = "transparent"),
-                      element_rect(fill = mut.color[3], color = "transparent"),
-                      element_rect(fill = mut.color[4], color = "transparent"),
-                      element_rect(fill = mut.color[5], color = "transparent"),
-                      element_rect(fill = mut.color[6], color = "transparent")
-                    ),
-                    text_x = list(
-                      element_text(color = "white", face = "bold", size = 6, margin = margin(1, 1, 1, 1))
+      p1 <- ggplot(data = df.pd, aes(x = MutationType, y = value/sum(value)*100)) +
+        geom_col(aes(fill = V2, alpha = status)) +
+        theme_bw() +
+        guides(fill = "none") +
+        scale_fill_manual(values = mut.color) +
+        scale_alpha_manual(values = alpha) +
+        facet_wrap2(.~V2, nrow = 1, scale = "free_x", drop = TRUE,
+                    strip = strip_themed(
+                      background_x = list(
+                        element_rect(fill = mut.color[1], color = "transparent"),
+                        element_rect(fill = mut.color[2], color = "transparent"),
+                        element_rect(fill = mut.color[3], color = "transparent"),
+                        element_rect(fill = mut.color[4], color = "transparent"),
+                        element_rect(fill = mut.color[5], color = "transparent"),
+                        element_rect(fill = mut.color[6], color = "transparent")
+                      ),
+                      text_x = list(
+                        element_text(color = "white", face = "bold", size = 6, margin = margin(1, 1, 1, 1))
+                      )
                     )
-                  )
-      ) +
-      geom_text(
-        data = anno,
-        aes(x = x, y = y, label = label),
-        inherit.aes = FALSE,
-        size = 2.4,
-        vjust = 1.1,
-        hjust = 1.1
-      ) +
-      scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
-      scale_x_discrete(labels = setNames(sbs.df$V3, sbs.df$V1)) +
-      coord_cartesian(clip = "off") +
-      ylab("% SBS") + xlab(x.label) +
-      theme(panel.border = element_blank(),
-            strip.background = element_blank(),
-            panel.spacing = unit(0, "lines"),
-            legend.position = "none",
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 3),
-            axis.ticks.x = element_blank(),
-            axis.text.y = element_text(size = 6),
-            axis.title.y = element_text(size = 8),
-            axis.title.x = element_text(size = 8))
+        ) +
+        geom_text(
+          data = anno,
+          aes(x = x, y = y, label = label),
+          inherit.aes = FALSE,
+          size = 2.4,
+          vjust = 1.1,
+          hjust = 1.1
+        ) +
+        scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+        scale_x_discrete(labels = setNames(sbs.df$V3, sbs.df$V1)) +
+        coord_cartesian(clip = "off") +
+        ylab("% SBS") + xlab(x.label) +
+        theme(panel.border = element_blank(),
+              strip.background = element_blank(),
+              panel.spacing = unit(0, "lines"),
+              legend.position = "none",
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 3),
+              axis.ticks.x = element_blank(),
+              axis.text.y = element_text(size = 6),
+              axis.title.y = element_text(size = 8),
+              axis.title.x = element_text(size = 8))
 
-    return(p1)
-  }
+      return(p1)
+    }
+  } else if(context == "288") { ## Required functions to plot sbs288
+    ## Set pdf height for saving
+    pdf.height <- 3.5
+    ## Mutation context colors
+    mut.color <- c('deepskyblue','black','red','lightgrey','yellowgreen','pink')
 
-  ## Plot layout
-  layout <- "
-  AAAABBBB
-  CCCCDDDD
-  FFEEEEGG"
+    ## Function to plot SBS192
+    plotSig <- function(df, x.label, alpha = 1) {
+      df.pd <- df %>% separate(MutationType, into = c("Strand", "MutationType"), sep = ":", remove = FALSE) %>%
+        left_join(x = ., y = sbs.df, by = c("MutationType"="V1"))
+      df.pd$MutationType <- factor(x = df.pd$MutationType, levels = sbs.df$V1)
+
+      anno <- df.pd %>% dplyr::filter(V2 == "T>G") %>%
+        mutate(x = Inf,
+               y = Inf,
+               label = paste0("Total: ", round(sum(df.pd$value), digits = 0))
+        )
+
+      p1 <- ggplot(df.pd %>% dplyr::filter(Strand != "N"), aes(x = MutationType, y = value/sum(value)*100, group = Strand)) +
+        geom_col(aes(fill = Strand), position = position_dodge(width = 0.8)) +
+        scale_fill_manual(values = c("firebrick3", "black")) +
+        facet_wrap2(.~V2, nrow = 1, scale = "free_x", drop = TRUE,
+                    strip = strip_themed(
+                      background_x = list(
+                        element_rect(fill = mut.color[1], color = "transparent"),
+                        element_rect(fill = mut.color[2], color = "transparent"),
+                        element_rect(fill = mut.color[3], color = "transparent"),
+                        element_rect(fill = mut.color[4], color = "transparent"),
+                        element_rect(fill = mut.color[5], color = "transparent"),
+                        element_rect(fill = mut.color[6], color = "transparent")
+                      ),
+                      text_x = list(
+                        element_text(color = "white", face = "bold", size = 6, margin = margin(1, 1, 1, 1))
+                      )
+                    )
+        ) +
+        theme_bw() +
+        geom_text(
+          data = anno,
+          aes(x = x, y = y, label = label),
+          inherit.aes = FALSE, size = 2.1, vjust = 1.1, hjust = 1.1,
+          family = "Arial", fontface = "plain"
+        ) +
+        scale_x_discrete(labels = sbs.df$V3) +
+        coord_cartesian(clip = "off") +
+        ylab("% SBS") +
+        theme(panel.border = element_blank(),
+              strip.background = element_blank(),
+              panel.spacing = unit(0, "lines"),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 3, margin = margin(t = -1)),
+              axis.ticks.x = element_blank(),
+              axis.text.y = element_text(size = 6),
+              axis.text.y.right = element_text(angle = -90),
+              axis.ticks.y.right = element_blank(),
+              axis.title.y = element_text(size = 8),
+              axis.title.x = element_text(size = 6),
+              legend.position = "none")
+
+      return(p1)
+    } ## End of required functions to plot sbs192
+
+    plotSig.multialpha <- function(df, x.label, alpha = 1) {
+      df.pd <- df %>% separate(MutationType, into = c("Strand", "MutationType"), sep = ":", remove = FALSE) %>%
+        left_join(x = ., y = sbs.df, by = c("MutationType"="V1"))
+      df.pd$MutationType <- factor(x = df.pd$MutationType, levels = sbs.df$V1)
+
+      anno <- df.pd %>% dplyr::filter(V2 == "T>G") %>%
+        mutate(x = Inf,
+               y = Inf,
+               label = paste0("Total: ", round(sum(df.pd$value), digits = 0))
+        )
+
+      p1 <- ggplot(data = df.pd %>% dplyr::filter(Strand != "N"), aes(x = MutationType, y = value/sum(value)*100, group = Strand)) +
+        geom_col(aes(fill = Strand, alpha = status), position = position_dodge(width = 0.8)) +
+        scale_fill_manual(values = c("firebrick3", "black")) +
+        scale_alpha_manual(values = alpha) +
+        facet_wrap2(.~V2, nrow = 1, scale = "free_x", drop = TRUE,
+                    strip = strip_themed(
+                      background_x = list(
+                        element_rect(fill = mut.color[1], color = "transparent"),
+                        element_rect(fill = mut.color[2], color = "transparent"),
+                        element_rect(fill = mut.color[3], color = "transparent"),
+                        element_rect(fill = mut.color[4], color = "transparent"),
+                        element_rect(fill = mut.color[5], color = "transparent"),
+                        element_rect(fill = mut.color[6], color = "transparent")
+                      ),
+                      text_x = list(
+                        element_text(color = "white", face = "bold", size = 6, margin = margin(1, 1, 1, 1))
+                      )
+                    )
+        ) +
+        theme_bw() +
+        geom_text(
+          data = anno,
+          aes(x = x, y = y, label = label),
+          inherit.aes = FALSE, size = 2.1, vjust = 1.1, hjust = 1.1,
+          family = "Arial", fontface = "plain"
+        ) +
+        scale_x_discrete(labels = sbs.df$V3) +
+        coord_cartesian(clip = "off") +
+        ylab("% SBS") +
+        theme(panel.border = element_blank(),
+              strip.background = element_blank(),
+              panel.spacing = unit(0, "lines"),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 3, margin = margin(t = -1)),
+              axis.ticks.x = element_blank(),
+              axis.text.y = element_text(size = 6),
+              axis.text.y.right = element_text(angle = -90),
+              axis.ticks.y.right = element_blank(),
+              axis.title.y = element_text(size = 8),
+              axis.title.x = element_text(size = 6),
+              legend.position = "none")
+
+      return(p1)
+    }
+
+  } ## End of required functions to plot sbs288
 
   counter2 <- 1
   for(samp in names(res)) {
@@ -446,21 +566,19 @@ SigRescuePlot <- function(res, ci = 0.025, output_path = getwd(), filename = "cl
     ## Uncleaned profile (Original)
     original.pd <- data.frame(MutationType = fit$MutationType,
                               value = fit$s_t)
-    p1 <- suppressMessages(plotSBS(df = original.pd, x.label = "Original"))
+    p1 <- suppressMessages(plotSig(df = original.pd, x.label = "Original"))
 
     ## Latent st (Cleaned)
     reconstruct_s_t.pd <- data.frame(MutationType = fit$MutationType,
                                      value = as.numeric(reconstruct_s_t))
 
-    p3 <- suppressMessages(plotSBS(df = reconstruct_s_t.pd, x.label = "Exposure", alpha = 1) +
-                             scale_y_continuous(breaks = seq(0, 20, by = 2)))
+    p3 <- suppressMessages(plotSig(df = reconstruct_s_t.pd, x.label = "Exposure", alpha = 1))
 
     ## Fixed sb (Baseline)
     reconstruct_s_b.pd <- data.frame(MutationType = fit$MutationType,
                                      value = as.numeric(reconstruct_s_b))
 
-    p4 <- suppressMessages(plotSBS(df = reconstruct_s_b.pd, x.label = "Background", alpha = 0.5) +
-                             scale_y_continuous(breaks = seq(0, 6, by = 2), limits = c(0,6)))
+    p4 <- suppressMessages(plotSig(df = reconstruct_s_b.pd, x.label = "Background", alpha = 0.5))
 
     ## Reconstructed ( Cleaned + Baseline)
     rsb <- reconstruct_s_b.pd %>% mutate(status = "Background")
@@ -469,18 +587,36 @@ SigRescuePlot <- function(res, ci = 0.025, output_path = getwd(), filename = "cl
     reconstructed.pd <- rbind(rsb, rst)
     reconstructed.pd$status <- factor(x = reconstructed.pd$status, levels = c("Background", "Exposure"))
 
-    p2 <- suppressMessages(plotSBS.multialpha(df = reconstructed.pd, x.label = "Reconstructed", alpha = c(0.5, 1)) +
-                             scale_y_continuous(breaks = seq(0, 10, by = 2)))
+    p2 <- suppressMessages(plotSig.multialpha(df = reconstructed.pd, x.label = "Reconstructed", alpha = c(0.5, 1)))
+
+    if(context == "288") {
+      p2 <- p2 + theme(legend.position = c(0, -0.85),
+                       legend.justification = c(0, 0.5),
+                       legend.key.size = unit(0.25, "cm"),
+                       legend.background = element_rect(fill = NA),
+                       legend.key = element_rect(fill = NA),
+                       legend.text = element_text(size = 5),
+                       legend.title = element_text(size = 5, margin = margin(b = -0.25))) +
+        guides(alpha = "none")
+    }
 
     summarytable <- data.frame(
       "Reconstruction Accuracy" = lsa::cosine(as.numeric(reconstructed), as.numeric(fit$s_t)),
-      "Background Activity" = theta_b,
+      "Background Activity" = sum(theta_b_ind),
       "Exposure Activity" = theta_t,
       check.names = FALSE)
 
     table.pd <- gt::gt(summarytable) |>
       gt::cols_align(align = "center", columns = everything()) |>
       gt::tab_options(table.font.size = px(10))
+
+    if(context %in% c("96", "288")) {
+      ## Plot layout
+      layout <- "
+      AAAABBBB
+      CCCCDDDD
+      FFEEEEGG"
+    }
 
     combined_plot1 <- p1 + p4 + p2 + p3 + table.pd + plot_spacer() + plot_layout(design=layout) +
       plot_annotation(title = samp) &
@@ -498,7 +634,7 @@ SigRescuePlot <- function(res, ci = 0.025, output_path = getwd(), filename = "cl
   files <- list.files(path = folder,
                       pattern = "\\.png$", full.names = TRUE)
 
-  pdf(file = paste0(output_path, "/", filename, ".pdf"), height = 3.5)
+  pdf(file = paste0(output_path, "/", filename, ".pdf"), height = pdf.height)
 
   for(f in files) {
     grid::grid.newpage()
