@@ -243,7 +243,7 @@ SigRescueAnalyze <- function(res) {
 #' @import ggplot2
 #' @import dplyr
 #' @import tibble
-#' @import tidyr
+#' @importFrom tidyr separate
 #' @import ggh4x
 #' @import gridExtra
 #' @import patchwork
@@ -441,12 +441,12 @@ SigRescuePlot <- function(res, context, ci = 0.025, output_path = getwd(), filen
         geom_text(
           data = anno,
           aes(x = x, y = y, label = label),
-          inherit.aes = FALSE, size = 2.1, vjust = 1.1, hjust = 1.1,
+          inherit.aes = FALSE, size = 2.4, vjust = 1.1, hjust = 1.1,
           family = "Arial", fontface = "plain"
         ) +
         scale_x_discrete(labels = sbs.df$V3) +
         coord_cartesian(clip = "off") +
-        ylab("% SBS") +
+        ylab("% SBS") + xlab(x.label) +
         theme(panel.border = element_blank(),
               strip.background = element_blank(),
               panel.spacing = unit(0, "lines"),
@@ -458,7 +458,7 @@ SigRescuePlot <- function(res, context, ci = 0.025, output_path = getwd(), filen
               axis.text.y.right = element_text(angle = -90),
               axis.ticks.y.right = element_blank(),
               axis.title.y = element_text(size = 8),
-              axis.title.x = element_text(size = 6),
+              axis.title.x = element_text(size = 8),
               legend.position = "none")
 
       return(p1)
@@ -498,12 +498,12 @@ SigRescuePlot <- function(res, context, ci = 0.025, output_path = getwd(), filen
         geom_text(
           data = anno,
           aes(x = x, y = y, label = label),
-          inherit.aes = FALSE, size = 2.1, vjust = 1.1, hjust = 1.1,
+          inherit.aes = FALSE, size = 2.4, vjust = 1.1, hjust = 1.1,
           family = "Arial", fontface = "plain"
         ) +
         scale_x_discrete(labels = sbs.df$V3) +
         coord_cartesian(clip = "off") +
-        ylab("% SBS") +
+        ylab("% SBS") + xlab(x.label) +
         theme(panel.border = element_blank(),
               strip.background = element_blank(),
               panel.spacing = unit(0, "lines"),
@@ -515,7 +515,7 @@ SigRescuePlot <- function(res, context, ci = 0.025, output_path = getwd(), filen
               axis.text.y.right = element_text(angle = -90),
               axis.ticks.y.right = element_blank(),
               axis.title.y = element_text(size = 8),
-              axis.title.x = element_text(size = 6),
+              axis.title.x = element_text(size = 8),
               legend.position = "none")
 
       return(p1)
