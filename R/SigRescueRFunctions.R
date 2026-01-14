@@ -99,6 +99,8 @@ SigRescueRun <- function(objects,
 #' metrics and generates the exposure mutational catalogue.
 #'
 #' @param res An object returned by `SigRescueR()` containing posterior estimates.
+#' @param res Numeric value indicating the probability mass of the credible interval used to
+#' summarize the posterior (e.g. 0.025 is 2.5% credible interval). Default = 0.025.
 #' @param MutationType A character vector specifying the ordered mutation context.
 #'
 #' @import rstan
@@ -109,7 +111,7 @@ SigRescueRun <- function(objects,
 #' @export
 
 
-SigRescueAnalyze <- function(res) {
+SigRescueAnalyze <- function(res, ci = 0.025) {
   ## Function to compute Poisson deviance
   poisson_deviance <- function(y, y_hat) {
     # handle zeros safely
@@ -155,7 +157,7 @@ SigRescueAnalyze <- function(res) {
     theta_b <- all_theta[-length(all_theta)]
 
     ## Extract posterior exposure profile and select lower bound (2.5% credible interval)
-    s_t <- apply(posterior$s_t, 2, quantile, probs = 0.025)
+    s_t <- apply(posterior$s_t, 2, quantile, probs = ci)
     s_t <- s_t / sum(s_t) ## normalize
 
     ## Convert relative probability distribution to count
@@ -245,7 +247,6 @@ SigRescueAnalyze <- function(res) {
 #' @import tibble
 #' @importFrom tidyr separate
 #' @import ggh4x
-#' @import gridExtra
 #' @import patchwork
 #' @import png
 #' @import grid

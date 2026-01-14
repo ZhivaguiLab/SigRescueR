@@ -4,10 +4,11 @@
 \alias{SigRescueAnalyze}
 \title{Extracts posterior sampling from \code{SigRescueR()}.}
 \usage{
-SigRescueAnalyze(res)
+SigRescueAnalyze(res, ci = 0.025)
 }
 \arguments{
-\item{res}{An object returned by \code{SigRescueR()} containing posterior estimates.}
+\item{res}{Numeric value indicating the probability mass of the credible interval used to
+summarize the posterior (e.g. 0.025 is 2.5\% credible interval). Default = 0.025.}
 
 \item{MutationType}{A character vector specifying the ordered mutation context.}
 }
