@@ -421,7 +421,7 @@ SigRescuePlot <- function(res, context, ci = 0.025, output_path = getwd(), filen
         )
 
       p1 <- ggplot(df.pd %>% dplyr::filter(Strand != "N"), aes(x = MutationType, y = value/sum(value)*100, group = Strand)) +
-        geom_col(aes(fill = Strand), position = position_dodge(width = 0.8)) +
+        geom_col(aes(fill = Strand), alpha = alpha, position = position_dodge(width = 0.8)) +
         scale_fill_manual(values = c("firebrick3", "black")) +
         facet_wrap2(.~V2, nrow = 1, scale = "free_x", drop = TRUE,
                     strip = strip_themed(
