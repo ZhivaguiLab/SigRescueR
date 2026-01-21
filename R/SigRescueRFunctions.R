@@ -422,7 +422,7 @@ SigRescuePlot <- function(res, context, ci = 0.025, output_path = getwd(), filen
 
       p1 <- ggplot(df.pd %>% dplyr::filter(Strand != "N"), aes(x = MutationType, y = value/sum(value)*100, group = Strand)) +
         geom_col(aes(fill = Strand), alpha = alpha, position = position_dodge(width = 0.8)) +
-        scale_fill_manual(values = c("firebrick3", "black")) +
+        scale_fill_manual(values = c("#014666", "#E42926")) +
         facet_wrap2(.~V2, nrow = 1, scale = "free_x", drop = TRUE,
                     strip = strip_themed(
                       background_x = list(
@@ -478,7 +478,7 @@ SigRescuePlot <- function(res, context, ci = 0.025, output_path = getwd(), filen
 
       p1 <- ggplot(data = df.pd %>% dplyr::filter(Strand != "N"), aes(x = MutationType, y = value/sum(value)*100, group = Strand)) +
         geom_col(aes(fill = Strand, alpha = status), position = position_dodge(width = 0.8)) +
-        scale_fill_manual(values = c("firebrick3", "black")) +
+        scale_fill_manual(values = c("#014666", "#E42926")) +
         scale_alpha_manual(values = alpha) +
         facet_wrap2(.~V2, nrow = 1, scale = "free_x", drop = TRUE,
                     strip = strip_themed(
