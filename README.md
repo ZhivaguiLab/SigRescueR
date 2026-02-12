@@ -60,7 +60,7 @@ load(paste0(output_path, filename, ".rda"))
 SigRescueR::SigRescueAnalyze(res = res)
 
 # Visualize cleaned profiles
-SigRescueR::SigRescuePlot(samp.cleaned)
+SigRescueR::SigRescuePlot(res = res, context = "96")
 ```
 
 ### **Documentation**
