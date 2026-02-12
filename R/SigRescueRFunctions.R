@@ -22,6 +22,9 @@ SigRescueSetup <- function(model = "COM-Poisson", warmup = 1000, iter = 2500, ch
     model <- "COM-Poisson"
     ## Preload model
     stan_file <- system.file("stan", "com_poisson.stan", package = "SigRescueR")
+    rstan::rstan_options(auto_write = TRUE)
+    smodel <- stan_model(file=stan_file)
+    rm(smodel)
     smodel <- stan_model(file=stan_file)
 
     ## Get path to model
